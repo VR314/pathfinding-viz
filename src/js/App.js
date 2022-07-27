@@ -1,18 +1,12 @@
 "use strict";
-let s = "test";
-console.log(s);
 const ROWS = 20;
 const COLUMNS = 20;
-function toggleSettings() {
-    let settings = document.getElementsByClassName('setting');
-    console.log(settings);
-    [...settings].forEach(s => {
-        if (s.classList.contains("collapsed"))
-            s.classList.remove("collapsed");
-        else
-            s.classList.add("collapsed");
-    });
-}
+var Status;
+(function (Status) {
+    Status["placingStart"] = "S";
+    Status["placingEnd"] = "E";
+    Status["placingWall"] = "W";
+})(Status || (Status = {}));
 function defineGrid() {
     let container = document.getElementById("container");
     if (container != null) {
@@ -35,4 +29,36 @@ function defineGrid() {
         }
     }
 }
-defineGrid();
+function toggleSettings() {
+    let settings = document.getElementsByClassName('setting');
+    console.log(settings);
+    [...settings].forEach(s => {
+        if (s.classList.contains("collapsed"))
+            s.classList.remove("collapsed");
+        else
+            s.classList.add("collapsed");
+    });
+}
+function addKeyPressHandler() {
+    let body = document.getElementsByTagName("body")[0];
+    body.onkeyup = (e) => {
+        switch (e.key) {
+            case " ":
+                console.log("SPACE");
+                break;
+            default:
+                console.log(e.key);
+                break;
+        }
+    };
+}
+function init() {
+    defineGrid();
+    addKeyPressHandler();
+    window.status = Status.placingStart;
+    let status = document.getElementById("status");
+    if (status) {
+        status.textContent = "Status: " + window.status;
+    }
+}
+init();

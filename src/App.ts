@@ -1,25 +1,19 @@
-let s = "test";
-console.log(s);
-
+// TODO: change rows/columns to be square (have constant sqsize (in what unit?)), adjust number of rows/cols to fit
+//      - or don't: it may cause fractional boxes or gaps at the boundaries?
 const ROWS = 20;
 const COLUMNS = 20;
 
-function toggleSettings() {
-  let settings = document.getElementsByClassName('setting');
-  console.log(settings);
-  [...settings].forEach(s => {
-    if(s.classList.contains("collapsed"))
-      s.classList.remove("collapsed");
-    else
-      s.classList.add("collapsed");
-  });
+enum Status {
+  placingStart = "S",
+  placingEnd = "E",
+  placingWall = "W"
 }
 
 function defineGrid() {
   let container = document.getElementById("container");
   if (container != null) {
-    container.style.gridTemplateColumns = `${100/(COLUMNS)}%`.repeat(COLUMNS);
-    container.style.gridTemplateRows =  `${100/(ROWS)}%`.repeat(ROWS);
+    container.style.gridTemplateColumns = `${100 / (COLUMNS)}%`.repeat(COLUMNS);
+    container.style.gridTemplateRows = `${100 / (ROWS)}%`.repeat(ROWS);
   }
 
   // indexing like a MATLAB matrix: (r, c)
@@ -43,4 +37,39 @@ function defineGrid() {
   }
 }
 
-defineGrid();
+function toggleSettings() {
+  let settings = document.getElementsByClassName('setting');
+  console.log(settings);
+  [...settings].forEach(s => {
+    if (s.classList.contains("collapsed"))
+      s.classList.remove("collapsed");
+    else
+      s.classList.add("collapsed");
+  });
+}
+
+function addKeyPressHandler() {
+  let body = document.getElementsByTagName("body")[0];
+  body.onkeyup = (e) => {
+    switch (e.key) {
+      case " ":
+        console.log("SPACE");
+        break;
+      default:
+        console.log(e.key);
+        break;
+    }
+  };
+}
+
+function init() {
+  defineGrid();
+  addKeyPressHandler();
+  window.status = Status.placingStart;
+  let status = document.getElementById("status");
+  if(status) {
+    status.textContent = "Status: " + window.status;
+  }
+}
+
+init();
