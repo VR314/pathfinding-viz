@@ -171,8 +171,6 @@ function idToRC(id) {
 function getDist(curr, target) {
     let currRC = idToRC(curr);
     let targetRC = idToRC(target);
-    console.log(currRC);
-    console.log(targetRC);
     return (Math.min(Math.abs(currRC.c - targetRC.c), Math.abs(currRC.r - targetRC.r)) * 14) + (Math.abs(Math.abs(currRC.c - targetRC.c) - Math.abs(currRC.r - targetRC.r)) * 10);
 }
 function toSearch(item, walls, passed) {
@@ -181,6 +179,24 @@ function toSearch(item, walls, passed) {
     }
     else {
         return false;
+    }
+}
+function updateGHs(gs, hs) {
+    let passed = getPassed(gs);
+    for (let i = 0; i < passed.length; i++) {
+        for (let j = 0; j < passed[i].length; j++) {
+            if (passed[i][j]) {
+                let cell = document.getElementById(`${i * COLUMNS + j}`);
+                if (cell) {
+                    cell.style.padding = "5px";
+                    cell.innerHTML = `
+          <p style="margin:0px">${gs[i][j]}
+            <span style="float:right">${hs[i][j]}</span>
+          </p><p style="text-align: center; margin:0px;" >${hs[i][j] + gs[i][j]}</p>
+          `;
+                }
+            }
+        }
     }
 }
 function runAStar() {
@@ -208,9 +224,13 @@ function runAStar() {
                 }
             });
             for (let j = 0; j < queue.length; j++) {
-                console.log(getDist(id(outermost[0]), id(queue[j])));
+                let { r, c } = idToRC(id(queue[j]));
+                gs[r][c] = getDist(id(outermost[0]), id(queue[j]));
+                hs[r][c] = getDist(id(END), id(queue[j]));
+                console.log(hs[r][c]);
             }
         }
+        updateGHs(gs, hs);
         completed = true;
     }
     return true;
