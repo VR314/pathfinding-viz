@@ -60,3 +60,15 @@ body {
 .collapsed {
   display: none;
 }
+
+.start {
+  background-color: greenyellow;
+}
+
+.end {
+  background-color: red;
+}
+
+.wall {
+  background-color: black;
+}

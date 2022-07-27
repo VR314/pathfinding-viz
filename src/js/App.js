@@ -6,7 +6,19 @@ var Status;
     Status["placingStart"] = "S";
     Status["placingEnd"] = "E";
     Status["placingWall"] = "W";
+    Status["removeWall"] = "R";
 })(Status || (Status = {}));
+function getCells() {
+    let cells = document.getElementsByClassName("cell");
+    let starts = [...cells].filter((cell) => cell.classList.contains("start"));
+    let ends = [...cells].filter((cell) => cell.classList.contains("end"));
+    let walls = [...cells].filter((cell) => cell.classList.contains("wall"));
+    return {
+        starts,
+        ends,
+        walls
+    };
+}
 function defineGrid() {
     let container = document.getElementById("container");
     if (container != null) {
@@ -25,6 +37,65 @@ function defineGrid() {
             cell.addEventListener("mouseleave", () => {
                 cell.classList.remove("hoverCell");
             });
+            cell.addEventListener("mousedown", () => {
+                switch (window.status) {
+                    case "S":
+                        let starts = getCells().starts;
+                        if (starts.length > 0) {
+                            starts[0].classList.remove("start");
+                        }
+                        cell.classList.add("start");
+                        break;
+                    case "E":
+                        let ends = getCells().ends;
+                        if (ends.length > 0) {
+                            ends[0].classList.remove("end");
+                        }
+                        cell.classList.add("end");
+                        break;
+                    case "W":
+                        if (!getCells().walls.includes(cell))
+                            cell.classList.add("wall");
+                        break;
+                    case "R":
+                        if (getCells().walls.includes(cell))
+                            cell.classList.remove("wall");
+                    default:
+                        console.log(window.status);
+                        break;
+                }
+            });
+            cell.addEventListener("mouseover", (e) => {
+                if (e.buttons !== 1) {
+                    return;
+                }
+                switch (window.status) {
+                    case "S":
+                        let starts = getCells().starts;
+                        if (starts.length > 0) {
+                            starts[0].classList.remove("start");
+                        }
+                        cell.classList.add("start");
+                        break;
+                    case "E":
+                        let ends = getCells().ends;
+                        if (ends.length > 0) {
+                            ends[0].classList.remove("end");
+                        }
+                        cell.classList.add("end");
+                        break;
+                    case "W":
+                        if (!getCells().walls.includes(cell))
+                            cell.classList.add("wall");
+                        break;
+                    case "R":
+                        if (getCells().walls.includes(cell))
+                            cell.classList.remove("wall");
+                    default:
+                        console.log(window.status);
+                        break;
+                }
+            });
             container?.appendChild(cell);
         }
     }
@@ -39,26 +110,39 @@ function toggleSettings() {
             s.classList.add("collapsed");
     });
 }
-function addKeyPressHandler() {
+function addKeyPressHandlerToBody() {
     let body = document.getElementsByTagName("body")[0];
     body.onkeyup = (e) => {
-        switch (e.key) {
-            case " ":
-                console.log("SPACE");
+        switch (e.key.toUpperCase()) {
+            case "S":
+                window.status = Status.placingStart;
+                break;
+            case "E":
+                window.status = Status.placingEnd;
+                break;
+            case "W":
+                window.status = Status.placingWall;
+                break;
+            case "R":
+                window.status = Status.removeWall;
                 break;
             default:
                 console.log(e.key);
                 break;
         }
+        updateStatusIndicator();
     };
 }
-function init() {
-    defineGrid();
-    addKeyPressHandler();
-    window.status = Status.placingStart;
+function updateStatusIndicator() {
     let status = document.getElementById("status");
     if (status) {
         status.textContent = "Status: " + window.status;
     }
+}
+function init() {
+    defineGrid();
+    addKeyPressHandlerToBody();
+    window.status = Status.placingStart;
+    updateStatusIndicator();
 }
 init();

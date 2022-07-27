@@ -6,7 +6,20 @@ const COLUMNS = 20;
 enum Status {
   placingStart = "S",
   placingEnd = "E",
-  placingWall = "W"
+  placingWall = "W",
+  removeWall = "R"
+}
+
+function getCells() {
+  let cells = document.getElementsByClassName("cell");
+  let starts = [...cells].filter((cell) => cell.classList.contains("start"));
+  let ends = [...cells].filter((cell) => cell.classList.contains("end"));
+  let walls = [...cells].filter((cell) => cell.classList.contains("wall"));
+  return {
+    starts,
+    ends,
+    walls
+  };
 }
 
 function defineGrid() {
@@ -32,6 +45,67 @@ function defineGrid() {
         cell.classList.remove("hoverCell");
       });
 
+      cell.addEventListener("mousedown", () => {
+        switch (window.status) {
+          case "S":
+            let starts = getCells().starts;
+            if (starts.length > 0) {
+              starts[0].classList.remove("start");
+            }
+            cell.classList.add("start");
+            break;
+          case "E":
+            let ends = getCells().ends;
+            if (ends.length > 0) {
+              ends[0].classList.remove("end");
+            }
+            cell.classList.add("end");
+            break;
+          case "W":
+            if (!getCells().walls.includes(cell))
+              cell.classList.add("wall");
+            break;
+          case "R":
+            if (getCells().walls.includes(cell))
+              cell.classList.remove("wall");
+          default:
+            console.log(window.status);
+            break;
+        }
+      });
+
+      cell.addEventListener("mouseover", (e) => {
+        if (e.buttons !== 1) {
+          return;
+        }
+        switch (window.status) {
+          case "S":
+            let starts = getCells().starts;
+            if (starts.length > 0) {
+              starts[0].classList.remove("start");
+            }
+            cell.classList.add("start");
+            break;
+          case "E":
+            let ends = getCells().ends;
+            if (ends.length > 0) {
+              ends[0].classList.remove("end");
+            }
+            cell.classList.add("end");
+            break;
+          case "W":
+            if (!getCells().walls.includes(cell))
+              cell.classList.add("wall");
+            break;
+          case "R":
+            if (getCells().walls.includes(cell))
+              cell.classList.remove("wall");
+          default:
+            console.log(window.status);
+            break;
+        }
+      });
+
       container?.appendChild(cell);
     }
   }
@@ -48,28 +122,43 @@ function toggleSettings() {
   });
 }
 
-function addKeyPressHandler() {
+function addKeyPressHandlerToBody() {
   let body = document.getElementsByTagName("body")[0];
   body.onkeyup = (e) => {
-    switch (e.key) {
-      case " ":
-        console.log("SPACE");
+    switch (e.key.toUpperCase()) {
+      case "S":
+        window.status = Status.placingStart;
+        break;
+      case "E":
+        window.status = Status.placingEnd;
+        break;
+      case "W":
+        window.status = Status.placingWall;
+        break;
+      case "R":
+        window.status = Status.removeWall;
         break;
       default:
         console.log(e.key);
         break;
     }
+    updateStatusIndicator();
   };
+}
+
+
+function updateStatusIndicator() {
+  let status = document.getElementById("status");
+  if (status) {
+    status.textContent = "Status: " + window.status;
+  }
 }
 
 function init() {
   defineGrid();
-  addKeyPressHandler();
+  addKeyPressHandlerToBody();
   window.status = Status.placingStart;
-  let status = document.getElementById("status");
-  if(status) {
-    status.textContent = "Status: " + window.status;
-  }
+  updateStatusIndicator();
 }
 
 init();
