@@ -45,6 +45,8 @@ function defineGrid() {
         cell.classList.remove("hoverCell");
       });
 
+
+      // TODO: move all mouse handler logic into one method (objects ARE passed by reference)
       cell.addEventListener("mousedown", () => {
         switch (window.status) {
           case "S":
@@ -52,6 +54,11 @@ function defineGrid() {
             if (starts.length > 0) {
               starts[0].classList.remove("start");
             }
+
+            if(cell.classList.contains("wall")){
+              cell.classList.remove("wall");
+            }
+
             cell.classList.add("start");
             break;
           case "E":
@@ -59,14 +66,19 @@ function defineGrid() {
             if (ends.length > 0) {
               ends[0].classList.remove("end");
             }
+
+            if(cell.classList.contains("wall")){
+              cell.classList.remove("wall");
+            }
+
             cell.classList.add("end");
             break;
           case "W":
-            if (!getCells().walls.includes(cell))
+            if (!cell.classList.contains("wall"))
               cell.classList.add("wall");
             break;
           case "R":
-            if (getCells().walls.includes(cell))
+            if (cell.classList.contains("wall"))
               cell.classList.remove("wall");
           default:
             console.log(window.status);
@@ -84,6 +96,11 @@ function defineGrid() {
             if (starts.length > 0) {
               starts[0].classList.remove("start");
             }
+            
+            if(cell.classList.contains("wall")){
+              cell.classList.remove("wall");
+            }
+
             cell.classList.add("start");
             break;
           case "E":
@@ -91,14 +108,19 @@ function defineGrid() {
             if (ends.length > 0) {
               ends[0].classList.remove("end");
             }
+
+            if(cell.classList.contains("wall")){
+              cell.classList.remove("wall");
+            }
+
             cell.classList.add("end");
             break;
           case "W":
-            if (!getCells().walls.includes(cell))
+            if (!cell.classList.contains("wall"))
               cell.classList.add("wall");
             break;
           case "R":
-            if (getCells().walls.includes(cell))
+            if (cell.classList.contains("wall"))
               cell.classList.remove("wall");
           default:
             console.log(window.status);
