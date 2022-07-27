@@ -55,7 +55,7 @@ function defineGrid() {
               starts[0].classList.remove("start");
             }
 
-            if(cell.classList.contains("wall")){
+            if (cell.classList.contains("wall")) {
               cell.classList.remove("wall");
             }
 
@@ -67,7 +67,7 @@ function defineGrid() {
               ends[0].classList.remove("end");
             }
 
-            if(cell.classList.contains("wall")){
+            if (cell.classList.contains("wall")) {
               cell.classList.remove("wall");
             }
 
@@ -96,8 +96,8 @@ function defineGrid() {
             if (starts.length > 0) {
               starts[0].classList.remove("start");
             }
-            
-            if(cell.classList.contains("wall")){
+
+            if (cell.classList.contains("wall")) {
               cell.classList.remove("wall");
             }
 
@@ -109,7 +109,7 @@ function defineGrid() {
               ends[0].classList.remove("end");
             }
 
-            if(cell.classList.contains("wall")){
+            if (cell.classList.contains("wall")) {
               cell.classList.remove("wall");
             }
 
@@ -174,6 +174,82 @@ function updateStatusIndicator() {
   if (status) {
     status.textContent = "Status: " + window.status;
   }
+}
+
+function id(element: Element): number {
+  return parseInt(element.id);
+}
+
+function getPassed(gs: number[][]): boolean[][] {
+  let passed: boolean[][] = new Array(ROWS);
+  for (let i = 0; i < gs.length; i++) {
+    passed[i] = new Array(COLUMNS);
+    for (let j = 0; j < gs[i].length; j++) {
+      passed[i][j] = (gs[i][j] !== null && gs[i][j] !== undefined && gs[i][j] !== 0);
+    }
+  }
+  return passed;
+}
+
+function idToRC(id: number) {
+  return { r: id / COLUMNS, c: id % COLUMNS };
+}
+
+function getH(curr: number, target: number): number {
+  let currRC = idToRC(curr);
+  let targetRC = idToRC(target);
+  return Math.min(Math.abs(currRC.c - targetRC.c), Math.abs(currRC.r - targetRC.c)) * 14 + Math.abs(Math.abs(currRC.c - targetRC.c) - Math.abs(currRC.r - targetRC.c)) * 10;
+}
+
+function toSearch(item: Element, walls: Element[], passed: boolean[][]) {
+  if (!walls.includes(item) && !passed[Math.floor(id(item) / COLUMNS)][id(item) % COLUMNS]) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+function runAStar() {
+  // TODO: remove the event handlers for placing tiles, to prevent interference during the algo running
+
+  let { starts, ends, walls } = getCells();
+  const START = starts[0];
+  const END = ends[0];
+  let completed = false;
+
+  let gs: number[][] = new Array(ROWS);
+  let hs: number[][] = new Array(ROWS);
+  for (let i = 0; i < ROWS; i++) {
+    gs[i] = new Array(COLUMNS);
+    hs[i] = new Array(COLUMNS);
+  }
+
+  let outermost = [START];
+
+
+  while (!completed) {
+    let queue:Element[] = [];
+    let passed = getPassed(gs);
+    console.log(passed);
+    for (let i = 0; i < outermost.length; i++) {
+      let borders = [document.getElementById(`${id(outermost[0]) - COLUMNS - 1}`), document.getElementById(`${id(outermost[0]) - COLUMNS}`), document.getElementById(`${id(outermost[0]) - COLUMNS + 1}`), document.getElementById(`${id(outermost[0]) - 1}`), document.getElementById(`${id(outermost[0]) + 1}`), document.getElementById(`${id(outermost[0]) + COLUMNS - 1}`),document.getElementById(`${id(outermost[0]) + COLUMNS}`),document.getElementById(`${id(outermost[0]) + COLUMNS + 1}`),];
+
+      borders.forEach((el) => {
+        if(el != null) {
+          if(toSearch(el, walls, passed)) {
+            queue.push(el);
+          }
+        }
+      });
+
+      console.log(queue);
+    }
+
+    completed = true;
+  }
+
+  return true;
+
 }
 
 function init() {

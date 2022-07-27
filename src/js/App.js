@@ -151,6 +151,66 @@ function updateStatusIndicator() {
         status.textContent = "Status: " + window.status;
     }
 }
+function id(element) {
+    return parseInt(element.id);
+}
+function getPassed(gs) {
+    let passed = new Array(ROWS);
+    for (let i = 0; i < gs.length; i++) {
+        passed[i] = new Array(COLUMNS);
+        for (let j = 0; j < gs[i].length; j++) {
+            passed[i][j] = (gs[i][j] !== null && gs[i][j] !== undefined && gs[i][j] !== 0);
+        }
+    }
+    return passed;
+}
+function idToRC(id) {
+    return { r: id / COLUMNS, c: id % COLUMNS };
+}
+function getH(curr, target) {
+    let currRC = idToRC(curr);
+    let targetRC = idToRC(target);
+    return Math.min(Math.abs(currRC.c - targetRC.c), Math.abs(currRC.r - targetRC.c)) * 14 + Math.abs(Math.abs(currRC.c - targetRC.c) - Math.abs(currRC.r - targetRC.c)) * 10;
+}
+function toSearch(item, walls, passed) {
+    if (!walls.includes(item) && !passed[Math.floor(id(item) / COLUMNS)][id(item) % COLUMNS]) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+function runAStar() {
+    let { starts, ends, walls } = getCells();
+    const START = starts[0];
+    const END = ends[0];
+    let completed = false;
+    let gs = new Array(ROWS);
+    let hs = new Array(ROWS);
+    for (let i = 0; i < ROWS; i++) {
+        gs[i] = new Array(COLUMNS);
+        hs[i] = new Array(COLUMNS);
+    }
+    let outermost = [START];
+    while (!completed) {
+        let queue = [];
+        let passed = getPassed(gs);
+        console.log(passed);
+        for (let i = 0; i < outermost.length; i++) {
+            let borders = [document.getElementById(`${id(outermost[0]) - COLUMNS - 1}`), document.getElementById(`${id(outermost[0]) - COLUMNS}`), document.getElementById(`${id(outermost[0]) - COLUMNS + 1}`), document.getElementById(`${id(outermost[0]) - 1}`), document.getElementById(`${id(outermost[0]) + 1}`), document.getElementById(`${id(outermost[0]) + COLUMNS - 1}`), document.getElementById(`${id(outermost[0]) + COLUMNS}`), document.getElementById(`${id(outermost[0]) + COLUMNS + 1}`),];
+            borders.forEach((el) => {
+                if (el != null) {
+                    if (toSearch(el, walls, passed)) {
+                        queue.push(el);
+                    }
+                }
+            });
+            console.log(queue);
+        }
+        completed = true;
+    }
+    return true;
+}
 function init() {
     defineGrid();
     addKeyPressHandlerToBody();
