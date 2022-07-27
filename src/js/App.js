@@ -3,6 +3,16 @@ let s = "test";
 console.log(s);
 const ROWS = 20;
 const COLUMNS = 20;
+function toggleSettings() {
+    let settings = document.getElementsByClassName('setting');
+    console.log(settings);
+    [...settings].forEach(s => {
+        if (s.classList.contains("collapsed"))
+            s.classList.remove("collapsed");
+        else
+            s.classList.add("collapsed");
+    });
+}
 function defineGrid() {
     let container = document.getElementById("container");
     if (container != null) {
