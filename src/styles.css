@@ -75,3 +75,7 @@ body {
 .wall {
   background-color: black;
 }
+
+.searched {
+  background-color: aqua;
+}

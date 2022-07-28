@@ -13,10 +13,12 @@ function getCells() {
     let starts = [...cells].filter((cell) => cell.classList.contains("start"));
     let ends = [...cells].filter((cell) => cell.classList.contains("end"));
     let walls = [...cells].filter((cell) => cell.classList.contains("wall"));
+    let selected = [...cells].filter((cell) => cell.classList.contains("selected"));
     return {
         starts,
         ends,
-        walls
+        walls,
+        selected
     };
 }
 function defineGrid() {
@@ -159,9 +161,10 @@ function getPassed(gs) {
     for (let i = 0; i < gs.length; i++) {
         passed[i] = new Array(COLUMNS);
         for (let j = 0; j < gs[i].length; j++) {
-            passed[i][j] = (gs[i][j] !== null && gs[i][j] !== undefined && gs[i][j] !== 0);
+            passed[i][j] = (gs[i][j] !== null && gs[i][j] !== undefined);
         }
     }
+    console.log(gs);
     return passed;
 }
 function idToRC(id) {
@@ -173,8 +176,8 @@ function getDist(curr, target) {
     let targetRC = idToRC(target);
     return (Math.min(Math.abs(currRC.c - targetRC.c), Math.abs(currRC.r - targetRC.r)) * 14) + (Math.abs(Math.abs(currRC.c - targetRC.c) - Math.abs(currRC.r - targetRC.r)) * 10);
 }
-function toSearch(item, walls, passed) {
-    if (!walls.includes(item) && !passed[Math.floor(id(item) / COLUMNS)][id(item) % COLUMNS]) {
+function toSearch(item, walls, selected, passed) {
+    if (!walls.includes(item) && !selected.includes(item) && !passed[Math.floor(id(item) / COLUMNS)][id(item) % COLUMNS]) {
         return true;
     }
     else {
@@ -183,11 +186,13 @@ function toSearch(item, walls, passed) {
 }
 function updateGHs(gs, hs) {
     let passed = getPassed(gs);
+    console.log(passed);
     for (let i = 0; i < passed.length; i++) {
         for (let j = 0; j < passed[i].length; j++) {
             if (passed[i][j]) {
                 let cell = document.getElementById(`${i * COLUMNS + j}`);
                 if (cell) {
+                    console.log(id(cell));
                     cell.style.padding = "5px";
                     cell.innerHTML = `
           <p style="margin:0px">${gs[i][j]}
@@ -199,8 +204,65 @@ function updateGHs(gs, hs) {
         }
     }
 }
-function runAStar() {
+function getNeighbors(id) {
+    let res = [id - COLUMNS - 1, id - COLUMNS, id - COLUMNS + 1,
+        id - 1, id + 1,
+        id + COLUMNS - 1, id + COLUMNS, id + COLUMNS + 1];
+    res = res.filter((el) => el >= 0 && el < ROWS * COLUMNS);
+    return res;
+}
+function AStar() {
     let { starts, ends, walls } = getCells();
+    const START = starts[0];
+    const END = ends[0];
+    let completed = false;
+    let gs = new Array(ROWS);
+    let hs = new Array(ROWS);
+    let parents = new Array(ROWS * COLUMNS);
+    for (let i = 0; i < ROWS; i++) {
+        gs[i] = new Array(COLUMNS);
+        hs[i] = new Array(COLUMNS);
+    }
+    let open = [id(START)];
+    let closed = [];
+    walls.forEach((el) => {
+        closed.push(id(el));
+    });
+    while (open.length > 0 && open[open.length - 1] !== id(END)) {
+        let curr = open.pop();
+        if (curr === undefined) {
+            console.error("ERROR!");
+            return;
+        }
+        closed.push(curr);
+        let neighbors = getNeighbors(curr);
+        neighbors.filter((el) => !closed.includes(el));
+        for (let n of neighbors) {
+            if (!open.includes(n) && !closed.includes(n)) {
+                open.push(n);
+                let { r, c } = idToRC(n);
+                gs[r][c] = getDist(n, id(START));
+                hs[r][c] = getDist(n, id(END));
+                parents[n] = curr;
+            }
+        }
+        open = open.sort((a, b) => {
+            let { r: aR, c: aC } = idToRC(a);
+            let { r: bR, c: bC } = idToRC(b);
+            return 0 - (gs[aR][aC] + hs[aR][aC]) + (gs[bR][bC] + hs[bR][bC]);
+            s;
+        });
+        updateGHs(gs, hs);
+    }
+    let curr = parents[id(END)];
+    while (curr !== id(START)) {
+        document.getElementById(`${curr}`)?.classList.add("searched");
+        curr = parents[curr];
+        console.log(curr);
+    }
+}
+function runAStar() {
+    let { starts, ends, walls, selected } = getCells();
     const START = starts[0];
     const END = ends[0];
     let completed = false;
@@ -218,20 +280,44 @@ function runAStar() {
             let borders = [document.getElementById(`${id(outermost[0]) - COLUMNS - 1}`), document.getElementById(`${id(outermost[0]) - COLUMNS}`), document.getElementById(`${id(outermost[0]) - COLUMNS + 1}`), document.getElementById(`${id(outermost[0]) - 1}`), document.getElementById(`${id(outermost[0]) + 1}`), document.getElementById(`${id(outermost[0]) + COLUMNS - 1}`), document.getElementById(`${id(outermost[0]) + COLUMNS}`), document.getElementById(`${id(outermost[0]) + COLUMNS + 1}`),];
             borders.forEach((el) => {
                 if (el != null) {
-                    if (toSearch(el, walls, passed)) {
+                    if (toSearch(el, walls, selected, passed)) {
                         queue.push(el);
                     }
                 }
             });
+            let minSum = Infinity;
+            let nextCell = queue[0];
+            let minHs = Infinity;
+            let sums = [];
             for (let j = 0; j < queue.length; j++) {
                 let { r, c } = idToRC(id(queue[j]));
-                gs[r][c] = getDist(id(outermost[0]), id(queue[j]));
+                gs[r][c] = getDist(id(START), id(queue[j]));
                 hs[r][c] = getDist(id(END), id(queue[j]));
-                console.log(hs[r][c]);
+                sums[j] = gs[r][c] + hs[r][c];
+                if (sums[j] < minSum) {
+                    minSum = sums[j];
+                    nextCell = queue[j];
+                    minHs = hs[r][c];
+                }
+                else if (sums[j] == minSum) {
+                    if (hs[r][c] < minHs) {
+                        minSum = sums[j];
+                        nextCell = queue[j];
+                        minHs = hs[r][c];
+                    }
+                }
             }
+            outermost = [nextCell];
+            let cell = document.getElementById(`${id(nextCell)}`);
+            if (getCells().ends[0] === nextCell) {
+                completed = true;
+            }
+            if (cell) {
+                console.log(id(cell));
+                cell.classList.add("searched");
+            }
+            updateGHs(gs, hs);
         }
-        updateGHs(gs, hs);
-        completed = true;
     }
     return true;
 }
