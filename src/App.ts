@@ -15,12 +15,10 @@ function getCells() {
   let starts = [...cells].filter((cell) => cell.classList.contains("start"));
   let ends = [...cells].filter((cell) => cell.classList.contains("end"));
   let walls = [...cells].filter((cell) => cell.classList.contains("wall"));
-  let selected = [...cells].filter((cell) => cell.classList.contains("selected"));
   return {
     starts,
     ends,
-    walls,
-    selected
+    walls
   };
 }
 
@@ -205,14 +203,6 @@ function getDist(curr: number, target: number): number {
   return (Math.min(Math.abs(currRC.c - targetRC.c), Math.abs(currRC.r - targetRC.r)) * 14) + (Math.abs(Math.abs(currRC.c - targetRC.c) - Math.abs(currRC.r - targetRC.r)) * 10);
 }
 
-function toSearch(item: Element, walls: Element[], selected: Element[], passed: boolean[][]) {
-  if (!walls.includes(item) && !selected.includes(item) && !passed[Math.floor(id(item) / COLUMNS)][id(item) % COLUMNS]) {
-    return true;
-  } else {
-    return false;
-  }
-}
-
 function updateGHs(gs: number[][], hs: number[][]): void {
   let passed = getPassed(gs);
   console.log(passed);
@@ -221,16 +211,12 @@ function updateGHs(gs: number[][], hs: number[][]): void {
       if (passed[i][j]) {
         let cell = document.getElementById(`${i * COLUMNS + j}`);
         if (cell) {
-          console.log(id(cell))
           cell.style.padding = "5px";
           cell.innerHTML = `
           <p style="margin:0px">${gs[i][j]}
             <span style="float:right">${hs[i][j]}</span>
           </p><p style="text-align: center; margin:0px;" >${hs[i][j] + gs[i][j]}</p>
           `;
-
-
-
         }
       }
     }
@@ -247,9 +233,8 @@ function getNeighbors(id: number): number[] {
 
 function AStar() {
   let { starts, ends, walls } = getCells();
-  const START = starts[0];
-  const END = ends[0];
-  let completed = false;
+  const START = id(starts[0]);
+  const END = id(ends[0]);
 
   let gs: number[][] = new Array(ROWS);
   let hs: number[][] = new Array(ROWS);
@@ -259,13 +244,13 @@ function AStar() {
     hs[i] = new Array(COLUMNS);
   }
 
-  let open: number[] = [id(START)];
+  let open: number[] = [START];
   let closed: number[] = [];
   walls.forEach((el) => {
     closed.push(id(el));
   });
 
-  while (open.length > 0 && open[open.length - 1] !== id(END)) {
+  while (open.length > 0 && open[open.length - 1] !== END) {
     let curr = open.pop();
     if (curr === undefined) {
       console.error("ERROR!");
@@ -280,8 +265,8 @@ function AStar() {
       if (!open.includes(n) && !closed.includes(n)) {
         open.push(n);
         let { r, c } = idToRC(n);
-        gs[r][c] = getDist(n, id(START));
-        hs[r][c] = getDist(n, id(END));
+        gs[r][c] = getDist(n, START);
+        hs[r][c] = getDist(n, END);
         parents[n] = curr;
       }
     }
@@ -290,95 +275,18 @@ function AStar() {
     open = open.sort((a, b) => {
       let { r: aR, c: aC } = idToRC(a);
       let { r: bR, c: bC } = idToRC(b);
-      return 0 - (gs[aR][aC] + hs[aR][aC]) + (gs[bR][bC] + hs[bR][bC]);s
+      return 0 - (gs[aR][aC] + hs[aR][aC]) + (gs[bR][bC] + hs[bR][bC]);
     });
 
     updateGHs(gs, hs);
   }
 
-  let curr = parents[id(END)];
-  while(curr !== id(START)) {
+  let curr = parents[END];
+  while(curr !== START) {
     document.getElementById(`${curr}`)?.classList.add("searched");
     curr = parents[curr];
     console.log(curr);
   }
-}
-
-
-
-function runAStar() {
-  // TODO: remove the event handlers for placing tiles, to prevent interference during the algo running
-  let { starts, ends, walls, selected } = getCells();
-  const START = starts[0];
-  const END = ends[0];
-  let completed = false;
-
-  let gs: number[][] = new Array(ROWS);
-  let hs: number[][] = new Array(ROWS);
-  for (let i = 0; i < ROWS; i++) {
-    gs[i] = new Array(COLUMNS);
-    hs[i] = new Array(COLUMNS);
-  }
-
-  let outermost = [START];
-
-
-  while (!completed) {
-    let queue: Element[] = [];
-    let passed = getPassed(gs);
-    for (let i = 0; i < outermost.length; i++) {
-      let borders = [document.getElementById(`${id(outermost[0]) - COLUMNS - 1}`), document.getElementById(`${id(outermost[0]) - COLUMNS}`), document.getElementById(`${id(outermost[0]) - COLUMNS + 1}`), document.getElementById(`${id(outermost[0]) - 1}`), document.getElementById(`${id(outermost[0]) + 1}`), document.getElementById(`${id(outermost[0]) + COLUMNS - 1}`), document.getElementById(`${id(outermost[0]) + COLUMNS}`), document.getElementById(`${id(outermost[0]) + COLUMNS + 1}`),];
-
-      borders.forEach((el) => {
-        if (el != null) {
-          if (toSearch(el, walls, selected, passed)) {
-            queue.push(el);
-          }
-        }
-      });
-
-      let minSum = Infinity;
-      let nextCell = queue[0];
-      let minHs = Infinity;
-      let sums: number[] = [];
-      for (let j = 0; j < queue.length; j++) {
-        let { r, c } = idToRC(id(queue[j]));
-        gs[r][c] = getDist(id(START), id(queue[j]));
-        hs[r][c] = getDist(id(END), id(queue[j]));
-        sums[j] = gs[r][c] + hs[r][c];
-        if (sums[j] < minSum) {
-          minSum = sums[j];
-          nextCell = queue[j];
-          minHs = hs[r][c];
-        } else if (sums[j] == minSum) {
-          if (hs[r][c] < minHs) {
-            minSum = sums[j];
-            nextCell = queue[j];
-            minHs = hs[r][c];
-          }
-        }
-      }
-      outermost = [nextCell];
-      let cell = document.getElementById(`${id(nextCell)}`);
-
-      if (getCells().ends[0] === nextCell) {
-        completed = true;
-      }
-
-      if (cell) {
-        console.log(id(cell));
-        cell.classList.add("searched");
-      }
-
-      updateGHs(gs, hs);
-    }
-
-
-  }
-
-
-  return true;
-
 }
 
 function init() {
